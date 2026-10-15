@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timing Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,500;0,700;1,800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#121212; --panel:#181818; --line:#262626; --line-soft:#1f1f1f;
+  --text:#e8e8e8; --muted:#8a8a8a; --hover:#1d1d1d;
+  --violet:#b44cff; --violet-bg:rgba(180,76,255,.10);
+  --green:#2bff7a; --green-bg:rgba(43,255,122,.08);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,"Liberation Mono",monospace;
+  --img-h:26px;
+}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;overflow:hidden}
+
+/* ---------- Pantalla de inicio (menú de simulación) ---------- */
+:root{--display:"Rajdhani","Montserrat","Segoe UI",system-ui,-apple-system,sans-serif;--red:#ff2b3c}
+.topbar{position:fixed;top:0;left:0;right:0;height:60px;z-index:10;display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;background:#000;border-bottom:2px solid var(--red);box-shadow:0 2px 22px rgba(255,43,60,.35)}
+.logo{display:flex;align-items:center;gap:10px;background:none;border:0;padding:4px 6px;cursor:pointer;color:#fff;border-radius:6px}
+.logo svg{width:34px;height:34px;color:var(--red);filter:drop-shadow(0 0 6px rgba(255,43,60,.55));transition:transform .35s}
+.logo:hover svg{transform:rotate(-14deg) scale(1.08)}
+.logo-txt{font:italic 800 24px/1 "Montserrat",var(--display);letter-spacing:.5px;text-transform:uppercase}
+.logo-txt b{color:var(--red);font-weight:800;margin-left:6px}
+.top-ico{display:flex;gap:6px}
+.top-ico button{width:40px;height:40px;display:grid;place-items:center;background:none;border:0;border-radius:8px;color:#aab0ba;cursor:pointer;transition:color .15s,background .15s}
+.top-ico button:hover{color:#fff;background:rgba(255,255,255,.07)}
+.top-ico svg{width:22px;height:22px}
+.logo:focus-visible,.top-ico button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+.home{position:fixed;inset:0;overflow:auto;display:flex;flex-direction:column;padding:96px 28px 58px;font-family:var(--display);
+  background:
+    radial-gradient(ellipse at 15% 0%,rgba(255,43,60,.10),transparent 45%),
+    radial-gradient(ellipse at 90% 100%,rgba(47,140,255,.07),transparent 50%),
+    repeating-linear-gradient(45deg,rgba(255,255,255,.014) 0 2px,transparent 2px 5px),
+    #0b0e11}
+.home-inner{width:100%;max-width:1120px;margin:auto}
+.home-title{font:700 clamp(40px,6vw,66px)/1 var(--display);color:#fff;letter-spacing:.5px}
+.home-sub{margin:12px 0 34px;color:#aeb4bd;font:500 clamp(16px,2vw,20px) var(--display)}
+.home-sub::after{content:"";display:block;width:64px;height:4px;margin-top:18px;background:var(--red);border-radius:2px;transform:skewX(-20deg)}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+.home-foot{position:fixed;left:0;right:0;bottom:0;height:10px;z-index:5;pointer-events:none;
+  background:repeating-linear-gradient(115deg,var(--red) 0 14px,#16181d 14px 44px,#2b2f36 44px 58px,#16181d 58px 100px);
+  box-shadow:0 -6px 30px rgba(255,43,60,.2)}
+
+.tile{--c:#2f8cff;--scene:linear-gradient(135deg,#10161f,#0b0e11);position:relative;isolation:isolate;display:flex;align-items:center;gap:22px;
+  min-height:178px;padding:26px 28px;text-align:left;color:#fff;font-family:var(--display);cursor:pointer;overflow:hidden;
+  background:#0f1318;border:1px solid rgba(255,255,255,.08);border-left:6px solid var(--c);border-radius:8px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.tile-bg{position:absolute;inset:0;z-index:-1;background-image:var(--img,linear-gradient(transparent,transparent)),var(--scene);
+  background-size:cover;background-position:center;transition:filter .25s}
+.tile-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.9) 0%,rgba(0,0,0,.64) 55%,rgba(0,0,0,.38) 100%)}
+.tile:hover{transform:scale(1.02);border-top-color:rgba(255,255,255,.2);border-right-color:rgba(255,255,255,.2);border-bottom-color:rgba(255,255,255,.2);
+  box-shadow:0 16px 44px rgba(0,0,0,.6),0 0 28px -4px var(--c)}
+.tile:hover .tile-bg{filter:brightness(1.4) saturate(1.15)}
+.tile:focus-visible{outline:2px solid var(--c);outline-offset:3px}
+.tile-ico{flex:none;width:60px;height:60px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.2);border-radius:10px;background:rgba(0,0,0,.38)}
+.tile-ico svg{width:32px;height:32px}
+.tile-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.tile-txt strong{font:700 clamp(24px,2.6vw,33px)/1.1 var(--display);letter-spacing:.3px}
+.tile-txt span{color:#b8beC8;font:500 15.5px/1.35 var(--display)}
+.tile-arrow{flex:none;width:30px;height:30px;color:#fff;opacity:.85;transition:transform .2s}
+.tile:hover .tile-arrow{transform:translateX(4px);opacity:1}
+/* colores y escenas de respaldo (se superponen las imágenes de fondosInicio si existen) */
+.t-general{--c:#2f8cff;--scene:radial-gradient(ellipse at 85% 110%,rgba(47,140,255,.45),transparent 60%),linear-gradient(135deg,#111a26,#0b0e11)}
+.t-calle{--c:#1fd96a;--scene:linear-gradient(180deg,#1b1033 0%,#6d2c45 48%,#e0803a 74%,#15100e 74%)}
+.t-comp{--c:#ff2b3c;--scene:linear-gradient(180deg,#13203a 0%,#a8473b 62%,#1b1515 62%)}
+.t-prob{--c:#a855f7;--scene:radial-gradient(circle at 78% 30%,rgba(168,85,247,.5),transparent 45%),linear-gradient(135deg,#09090f,#241040 65%,#0c0c12)}
+@media (max-width:800px){
+  .tiles{grid-template-columns:1fr}
+  .tile{min-height:150px;padding:20px}
+  .topbar{padding:0 14px}
+  .home{padding:84px 16px 52px}
+}
+
+.menu-btn{flex:1 1 220px;max-width:290px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+  text-align:left;padding:28px 28px 26px;background:var(--panel);color:var(--text);
+  border:1px solid var(--line);border-radius:10px;cursor:pointer;font:600 24px var(--sans);
+  box-shadow:inset 0 3px 0 #2e2e2e,0 8px 30px rgba(0,0,0,.35);
+  transition:transform .15s,background .15s,border-color .15s,box-shadow .15s}
+.menu-btn small{font:400 13px var(--sans);color:var(--muted)}
+.menu-btn:hover{transform:translateY(-3px);background:#1e1e1e;border-color:#444;
+  box-shadow:inset 0 3px 0 var(--violet),0 14px 44px rgba(180,76,255,.22)}
+.menu-btn:focus-visible,.close:focus-visible,.fold:focus-visible,.refresh:focus-visible,select:focus-visible{
+  outline:2px solid var(--violet);outline-offset:3px}
+
+/* ---------- Escritorio y ventanas flotantes ---------- */
+.desktop{position:fixed;inset:0;z-index:20;pointer-events:none;overflow:hidden}
+.win{position:absolute;pointer-events:auto;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);border:1px solid var(--line);border-radius:10px;outline:none;
+  box-shadow:0 12px 40px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.4);animation:pop .18s ease-out}
+.win.active{border-color:#3d3d3d;box-shadow:0 22px 70px rgba(0,0,0,.7),0 2px 12px rgba(0,0,0,.5)}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+
+/* Barra superior = zona de arrastre */
+.win-bar{display:flex;align-items:center;gap:10px;flex:none;padding:7px 10px 7px 16px;background:var(--panel);
+  border-bottom:1px solid var(--line);cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none}
+.win-bar:active{cursor:grabbing}
+.win-title{font-size:14px;font-weight:600;color:var(--muted);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.win-title b{font-weight:400;color:#555;margin:0 4px}
+.win.active .win-title{color:var(--text)}
+.close{width:30px;height:30px;flex:none;background:transparent;border:1px solid var(--line);color:var(--muted);
+  border-radius:6px;font:22px/1 var(--sans);cursor:pointer;display:grid;place-items:center;padding:0 0 2px}
+.close:hover{color:var(--text);border-color:#3a3a3a}
+
+/* Barra de herramientas + panel de filtros plegable */
+.win-tools{display:flex;align-items:center;gap:12px;flex:none;flex-wrap:wrap;padding:6px 12px;border-bottom:1px solid var(--line-soft)}
+.fold{display:flex;align-items:center;gap:8px;background:none;border:0;color:var(--muted);font:13px var(--sans);
+  cursor:pointer;padding:5px 8px;border-radius:5px}
+.fold:hover{color:var(--text);background:var(--hover)}
+.arrow{display:inline-block;font-size:10px;transition:transform .22s}
+.win.folded .arrow{transform:rotate(180deg)}
+.tools-r{margin-left:auto;display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px}
+.refresh{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:5px 12px;font:13px var(--sans);cursor:pointer}
+.refresh:hover{color:var(--text)}
+.panel{display:grid;grid-template-rows:1fr;flex:none;background:var(--panel);border-bottom:1px solid var(--line);
+  transition:grid-template-rows .24s ease,border-color .24s}
+.win.folded .panel{grid-template-rows:0fr;border-bottom-color:transparent}
+.panel-in{overflow:hidden;min-height:0}
+.pad{padding:12px 16px 14px;max-height:42vh;overflow:auto}
+.filters{display:flex;gap:14px;flex-wrap:wrap}
+.filters:not([hidden]){margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
+.filters label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+select{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:5px;
+  padding:8px 10px;min-width:140px;font:14px var(--sans)}
+.cols{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cols-title{font-size:12px;color:var(--muted);margin-right:6px}
+.pill{position:relative;cursor:pointer;user-select:none}
+.pill input{position:absolute;opacity:0;pointer-events:none}
+.pill span{display:inline-block;padding:5px 13px;border:1px solid var(--line);border-radius:999px;
+  font-size:13px;color:#6b6b6b;transition:background .15s,color .15s,border-color .15s}
+.pill:hover span{color:var(--text);border-color:#3a3a3a}
+.pill input:checked+span{background:rgba(255,255,255,.09);color:var(--text);border-color:#505050}
+.pill input:focus-visible+span{outline:2px solid var(--violet);outline-offset:2px}
+.banner{flex:none;background:#2a2410;color:#f0c75e;font-size:13px;padding:7px 16px;border-bottom:1px solid #3d3416}
+
+/* Ocultar columnas: clase h-<columna> en cada ventana (no afecta a las demás) */
+.h-origen [data-c="origen"],.h-organizador [data-c="organizador"],.h-categoria [data-c="categoria"],.h-clase [data-c="clase"],
+.h-equipo [data-c="equipo"],.h-pais [data-c="pais"],.h-marca [data-c="marca"],.h-modelo [data-c="modelo"]{display:none}
+
+/* ---------- Tabla ---------- */
+.win-main{flex:1;min-height:0;overflow:auto;padding:0 16px 12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 14px;text-align:left;white-space:nowrap;vertical-align:middle}
+thead th{position:sticky;top:0;background:var(--bg);color:var(--muted);font-size:12.5px;font-weight:500;
+  border-bottom:1px solid var(--line);z-index:1}
+tbody tr{border-bottom:1px solid var(--line-soft)}
+tbody tr:hover{background:var(--hover)}
+td.pos{color:var(--muted);font-family:var(--mono);width:56px}
+td.t,td.g,th.t,th.g{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+td.t{font-size:16px;font-weight:600}
+td.g{color:var(--muted)}
+td.strong{font-weight:500}
+.dim{color:#555}
+/* Imágenes (banderas y logos): altura uniforme y alineadas con el texto */
+.lg{display:inline-flex;align-items:center;height:var(--img-h);vertical-align:middle}
+.lg img{display:block;height:auto;width:auto;max-height:var(--img-h);max-width:80px;object-fit:contain}
+.lg.flag img{border-radius:3px;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
+/* Resaltados */
+tr.rec{background:var(--violet-bg);box-shadow:inset 3px 0 0 var(--violet)}
+tr.rec td.t,tr.rec td.pos{color:var(--violet)}
+tr.best{background:var(--green-bg);box-shadow:inset 3px 0 0 var(--green)}
+tr.best td.t,tr.best td.pos{color:var(--green)}
+.legend{display:flex;gap:18px;color:var(--muted);font-size:12.5px;padding:14px 0 4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+.empty{text-align:center;color:var(--muted);padding:60px 0}
+
+/* ---------- Ventana "Autos Probados" ---------- */
+.pb-body{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:22px;padding:24px;text-align:center}
+.pb-body p{color:var(--muted);font-size:14px}
+.pb-menu{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:100%}
+.pb-menu .menu-btn{flex:1 1 200px;max-width:260px}
+
+/* ---------- Autos Probados > Competición (drill-down) ---------- */
+.pb-comp{flex:1;min-height:0;display:flex;flex-direction:column}
+.pb-top{display:flex;align-items:center;gap:14px;flex:none;padding:10px 16px;border-bottom:1px solid var(--line-soft)}
+.back{display:inline-flex;align-items:center;gap:8px;flex:none;background:transparent;color:var(--text);border:1px solid var(--line);
+  border-radius:6px;padding:7px 16px;font:600 14px var(--sans);cursor:pointer;transition:background .15s,border-color .15s}
+.back:hover{background:var(--hover);border-color:#444}
+.back:focus-visible,.opt:focus-visible,.crumb:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+.crumbs{display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-width:0;font-size:14px}
+.crumb{background:none;border:0;padding:3px 5px;color:var(--muted);font:inherit;cursor:pointer;border-radius:4px}
+button.crumb:hover{color:var(--text);background:var(--hover)}
+.crumb.cur{color:var(--text);font-weight:600;cursor:default}
+.crumbs .sep{color:#555;padding:0 2px}
+.pb-view{flex:1;min-height:0;overflow:auto;padding:18px 16px 22px;outline:none}
+.pb-hint{color:var(--muted);font-size:13px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.opt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;
+  padding:20px 16px 16px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;
+  cursor:pointer;font:600 17px var(--sans);overflow-wrap:anywhere;box-shadow:inset 0 3px 0 #2e2e2e;
+  transition:transform .15s,background .15s,border-color .15s,box-shadow .15s}
+.opt-img{display:flex;align-items:center;justify-content:center;max-width:100%}
+.opt-img img{display:block;width:auto;height:auto;max-width:100%;max-height:44px;object-fit:contain}
+.opt-txt{line-height:1.25}
+.opt small{font:400 13px var(--sans);color:var(--muted)}
+.opt:hover{transform:translateY(-2px);background:#1e1e1e;border-color:#444;box-shadow:inset 0 3px 0 var(--violet),0 10px 30px rgba(180,76,255,.18)}
+.car{display:flex;flex-direction:column;gap:4px;padding:18px;background:rgba(255,255,255,.025);
+  border:1px solid var(--line-soft);border-left:3px solid #3a3a3a;border-radius:10px;overflow-wrap:anywhere}
+.car-name{font-size:17px;font-weight:600}
+.car-meta{font-size:13px;color:var(--muted)}
+.car-lbl{font-size:12px;color:var(--muted);margin-top:8px}
+.car-time{font:20px var(--mono);font-variant-numeric:tabular-nums}
+
+/* ---------- Header: botón "+" (Agregar Nuevo Tiempo) ---------- */
+.top-ico .add-btn{width:46px;height:40px;background:var(--red);color:#fff;border-radius:8px;
+  box-shadow:0 0 18px rgba(255,43,60,.45);transition:transform .15s,box-shadow .15s,filter .15s}
+.top-ico .add-btn:hover{background:var(--red);color:#fff;transform:scale(1.07);filter:brightness(1.12);box-shadow:0 0 26px rgba(255,43,60,.7)}
+.top-ico .add-btn svg{width:22px;height:22px}
+
+/* ---------- Ventana "Cargar Tiempo" ---------- */
+.cg-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px 16px;align-content:start}
+.cg-f{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
+.cg-f input{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:10px 12px;font:14px var(--sans);min-width:0}
+.cg-f input::placeholder{color:#555}
+.cg-f input:focus{outline:none;border-color:var(--violet);box-shadow:0 0 0 2px rgba(180,76,255,.25)}
+.cg-f input:user-invalid{border-color:#ff4d5d}
+.cg-f.cg-time input{font:600 18px var(--mono);letter-spacing:.5px}
+.cg-full{grid-column:1/-1}
+.cg-note{color:#666;font-size:12px}
+.cg-msg{color:#ff6b78;font-size:13px;min-height:18px}
+.save-btn{background:var(--red);color:#fff;border:0;border-radius:8px;padding:14px 20px;font:700 16px var(--sans);cursor:pointer;
+  transition:filter .15s,transform .15s}
+.save-btn:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px)}
+.save-btn:disabled{opacity:.6;cursor:progress}
+.save-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* ---------- Tiradores de redimensionado (bordes y esquinas) ---------- */
+.rz{position:absolute;z-index:6;touch-action:none}
+.rz[data-d="n"]{top:0;left:14px;right:14px;height:5px;cursor:ns-resize}
+.rz[data-d="s"]{bottom:0;left:14px;right:14px;height:5px;cursor:ns-resize}
+.rz[data-d="e"]{right:0;top:14px;bottom:14px;width:5px;cursor:ew-resize}
+.rz[data-d="w"]{left:0;top:14px;bottom:14px;width:5px;cursor:ew-resize}
+.rz[data-d="ne"]{top:0;right:0;width:14px;height:14px;cursor:nesw-resize}
+.rz[data-d="nw"]{top:0;left:0;width:14px;height:14px;cursor:nwse-resize}
+.rz[data-d="sw"]{bottom:0;left:0;width:14px;height:14px;cursor:nesw-resize}
+.rz[data-d="se"]{bottom:0;right:0;width:18px;height:18px;cursor:nwse-resize;
+  background:linear-gradient(135deg,transparent 52%,#555 52%,#555 60%,transparent 60%,transparent 72%,#555 72%,#555 80%,transparent 80%)}
+
+@media (max-width:720px){
+  .menu-btn{flex-basis:100%;max-width:none}
+  th,td{padding:10px 10px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="logo" type="button" aria-label="Lap Tracker">
+    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="17" cy="18" r="9.5"/><path d="M17 18l4.5-4.5M13.5 3.5h7M17 3.5v5"/><path d="M2 15h5M1 19.5h6M3 24h4"/></svg>
+    <span class="logo-txt">Lap<b>Tracker</b></span>
+  </button>
+  <div class="top-ico">
+    <button class="add-btn" type="button" aria-label="Agregar Nuevo Tiempo" title="Agregar nuevo tiempo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <button type="button" aria-label="Más opciones">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="home">
+  <div class="home-inner">
+    <h1 class="home-title">Menú Principal</h1>
+    <p class="home-sub">Seleccioná una opción para ver tus tiempos de vuelta.</p>
+    <nav class="tiles" aria-label="Menú principal">
+      <button class="tile t-general" type="button" data-open="general" data-fondo="general">
+        <span class="tile-bg" aria-hidden="true"></span>
+        <span class="tile-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5l3-3.2M9.5 2.5h5M12 2.5v3.5"/></svg></span>
+        <span class="tile-txt"><strong>Tabla General</strong><span>Consulta la clasificación general de todos tus tiempos de vuelta.</span></span>
+        <svg class="tile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <button class="tile t-calle" type="button" data-open="calle" data-fondo="calle">
+        <span class="tile-bg" aria-hidden="true"></span>
+        <span class="tile-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3L4 21M15.5 3L20 21M12 5v3M12 11v3M12 17v3"/></svg></span>
+        <span class="tile-txt"><strong>Tabla de Calle</strong><span>Revisá tus mejores tiempos en modo calle.</span></span>
+        <svg class="tile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <button class="tile t-comp" type="button" data-open="competicion" data-fondo="competicion">
+        <span class="tile-bg" aria-hidden="true"></span>
+        <span class="tile-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V3"/><path d="M5 4h14v10H5"/><path d="M5 4h3.5v3.5H5zM12 4h3.5v3.5H12zM8.5 7.5H12V11H8.5zM15.5 7.5H19V11h-3.5zM5 11h3.5v3H5zM12 11h3.5v3H12z" fill="#fff" stroke="none"/></svg></span>
+        <span class="tile-txt"><strong>Tabla de Competición</strong><span>Revisá tus mejores tiempos en modo competición.</span></span>
+        <svg class="tile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <button class="tile t-prob" type="button" data-garage data-fondo="probados">
+        <span class="tile-bg" aria-hidden="true"></span>
+        <span class="tile-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v-5l2-5.5h12L20 12v5z"/><path d="M4 12h16M6 17v2.5M18 17v2.5"/><circle cx="7.5" cy="14.6" r=".9" fill="#fff"/><circle cx="16.5" cy="14.6" r=".9" fill="#fff"/></svg></span>
+        <span class="tile-txt"><strong>Autos Probados</strong><span>Consultá los tiempos de vuelta de los autos que ya probaste.</span></span>
+        <svg class="tile-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </nav>
+  </div>
+</section>
+<div class="home-foot" aria-hidden="true"></div>
+
+<div class="desktop" id="desktop"></div>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN
+   En Google Sheets: Archivo > Compartir > Publicar en la web >
+   elige la hoja y el formato "Valores separados por comas (.csv)".
+   Pega aquí el enlace generado.
+   ============================================================ */
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlhGnS6H_p4hQQqxi-HYp7lWcascC8vw99rZI0UZTvh4a5lzyqt6JJvqBKJQvdPbPYz-mJ0YgYnmh_/pub?output=csv";
+const REFRESH_MS = 30000; // refresco automático (0 = desactivado)
+
+/* Web App de Google Apps Script que recibe los tiempos nuevos (POST con JSON).
+   Reemplaza "URL_AQUI" por el enlace de tu implementación. */
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXvrxtmxty_d4zW_5ATxrTxCN6XO68lJAxx0Nl0CDQfpDPzADwqJlamsR0YXDT6f72/exec";
+
+/* Datos de ejemplo: se usan mientras la URL sea el placeholder o si falla la carga */
+const DEMO_CSV = `Tipo_Uso,Origen,Organizador,Categoria,Clase,Equipo,Pais,Marca,Modelo,Año,Tipo_Vehiculo,Tiempo
+Competicion,Alemania,ADAC,GT3,Pro,Manthey,Alemania,Porsche,911 GT3 R,2023,GT,07:52.300
+Competicion,Alemania,ADAC,GT3,Pro,Rowe Racing,Alemania,BMW,M4 GT3,2023,GT,07:54.110
+Competicion,Alemania,ADAC,GT3,Am,Haupt Racing,Alemania,Mercedes-AMG,GT3 Evo,2022,GT,07:55.840
+Competicion,Japon,JAF,Super GT,GT500,TOM'S,Japon,Toyota,GR Supra GT500,2023,GT,01:47.920
+Competicion,Japon,JAF,Super GT,GT500,Team Impul,Japon,Nissan,Z GT500,2023,GT,01:48.350
+Competicion,Reino Unido,FIA,Formula 1,,Red Bull,Austria,Red Bull,RB19,2023,Formula,01:27.060
+Competicion,Reino Unido,FIA,Formula 1,,Ferrari,Italia,Ferrari,SF-23,2023,Formula,01:27.480
+Competicion,Reino Unido,FIA,Formula 1,,Mercedes,Alemania,Mercedes,W14,2023,Formula,01:27.910
+Competicion,Italia,FIA,Formula 2,,Prema,Italia,Dallara,F2 2018,2023,Formula,01:34.220
+Competicion,Italia,FIA,Formula 2,,ART,Francia,Dallara,F2 2018,2023,Formula,01:34.760
+Competicion,Argentina,ACTC,Turismo Carretera,,Dole Racing,Argentina,Chevrolet,Chevy,2023,Turismo,01:30.250
+Competicion,Argentina,ACTC,Turismo Carretera,,Las Toscas,Argentina,Ford,Falcon,2023,Turismo,01:30.610
+Competicion,Argentina,ACTC,Turismo Nacional,Clase 3,GC Competición,Argentina,Ford,Focus,2024,Turismo,01:35.120
+Competicion,Argentina,ACTC,Turismo Nacional,Clase 3,GC Competición,Argentina,Ford,Fiesta Kinetic,2024,Turismo,01:35.870
+Competicion,Argentina,ACTC,Turismo Nacional,Clase 3,JM Motorsport,Argentina,Chevrolet,Cruze,2024,Turismo,01:34.980
+Competicion,Argentina,ACTC,Turismo Nacional,Clase 2,Fiat Racing,Argentina,Fiat,Argo,2023,Turismo,01:38.400
+Calle,,,,,,,Porsche,911 GT2 RS,2018,,06:43.300
+Calle,,,,,,,Lamborghini,Aventador SVJ,2019,,06:44.970
+Calle,,,,,,,Mercedes-AMG,GT Black Series,2020,,06:43.616
+Calle,,,,,,,Nissan,GT-R Nismo,2017,,07:08.680
+Calle,,,,,,,Porsche,911 GT3 RS,2023,,06:49.328
+Calle,,,,,,,Chevrolet,Corvette Z06,2023,,06:49.275
+Calle,,,,,,,Ford,Mustang,1996,,07:41.200
+Calle,,,,,,,Ford,Mustang,2018,,07:12.500
+Calle,,,,,,,Ford,Focus RS,2017,,07:54.300`;
+
+/* ============================================================
+   DICCIONARIOS DE IMÁGENES
+   Clave = texto exacto del CSV (no distingue mayúsculas ni acentos).
+   Valor = URL de la imagen. Reemplaza estos placeholders por tus links.
+   Si un texto del CSV no está aquí, la tabla muestra el texto tal cual.
+   ============================================================ */
+const banderasOrigen = {            // columna "Origen" (de dónde es el auto o la categoría)
+  "Argentina":   "https://flagcdn.com/24x18/ar.png",
+  "Alemania":    "https://flagcdn.com/24x18/de.png",
+  "Japón":       "https://flagcdn.com/24x18/jp.png",
+  "Reino Unido": "https://flagcdn.com/24x18/gb.png",
+  "Italia":      "https://flagcdn.com/24x18/it.png"
+};
+const banderasPais = {              // columna "País" (país del equipo)
+  "Argentina": "https://flagcdn.com/24x18/ar.png",
+  "Alemania":  "https://flagcdn.com/24x18/de.png",
+  "Japón":     "https://flagcdn.com/24x18/jp.png",
+  "Italia":    "https://flagcdn.com/24x18/it.png",
+  "Austria":   "https://flagcdn.com/24x18/at.png"
+};
+const logosMarcas = {
+  "Porsche": "https://placehold.co/80x40/1a1a1a/ffffff/png?text=Porsche",
+  "Ferrari": "https://placehold.co/80x40/1a1a1a/ff2b2b/png?text=Ferrari",
+  "Toyota":  "https://placehold.co/80x40/1a1a1a/ffffff/png?text=Toyota",
+  "Nissan":  "https://placehold.co/80x40/1a1a1a/ffffff/png?text=Nissan"
+};
+const logosCompeticion = {
+  "ADAC": "https://placehold.co/80x40/1a1a1a/ffd400/png?text=ADAC",
+  "FIA":  "https://placehold.co/80x40/1a1a1a/4aa3ff/png?text=FIA"
+};
+const logosCategoria = {
+  "GT3":       "https://placehold.co/80x40/1a1a1a/ffffff/png?text=GT3",
+  "Formula 1": "https://placehold.co/80x40/1a1a1a/ff2b2b/png?text=F1"
+};
+const logosEquipos = {
+  "Manthey":  "https://placehold.co/80x40/1a1a1a/ffffff/png?text=Manthey",
+  "Red Bull": "https://placehold.co/80x40/1a1a1a/4aa3ff/png?text=Red+Bull",
+  "Ferrari":  "https://placehold.co/80x40/1a1a1a/ff2b2b/png?text=Ferrari"
+};
+const logosClase = {                // 7º diccionario: columna "Clase"
+  "Clase 3": "https://placehold.co/80x40/1a1a1a/2bff7a/png?text=Clase+3",
+  "Pro":     "https://placehold.co/80x40/1a1a1a/ffd400/png?text=Pro",
+  "GT500":   "https://placehold.co/80x40/1a1a1a/ff2b2b/png?text=GT500"
+};
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+const norm = s => String(s ?? "").trim().toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+
+/* "mm:ss.000" -> milisegundos (acepta también h:mm:ss.000 y ss.000) */
+function parseTime(str){
+  if(!str) return NaN;
+  const s = String(str).trim().replace(",", ".");
+  const m = s.match(/^(?:(\d+):)?(?:(\d+):)?(\d+(?:\.\d+)?)$/);
+  if(!m) return NaN;
+  let h = 0, min = 0;
+  if(m[1] !== undefined && m[2] !== undefined){ h = +m[1]; min = +m[2]; }
+  else if(m[1] !== undefined){ min = +m[1]; }
+  return Math.round(((h * 60 + min) * 60 + parseFloat(m[3])) * 1000);
+}
+const pad = (n, l = 2) => String(n).padStart(l, "0");
+
+/* Índices de búsqueda sin distinguir mayúsculas/acentos */
+const indexar = d => Object.fromEntries(Object.entries(d).map(([k, v]) => [norm(k), v]));
+const IMG = {
+  origen: indexar(banderasOrigen), pais: indexar(banderasPais), marca: indexar(logosMarcas), organizador: indexar(logosCompeticion),
+  categoria: indexar(logosCategoria), clase: indexar(logosClase), equipo: indexar(logosEquipos)
+};
+
+/* Celda con imagen si existe en su diccionario; si no, el texto original del CSV */
+function media(campo, valor){
+  if(!valor) return '<span class="dim">—</span>';
+  const url = IMG[campo][norm(valor)];
+  if(!url) return esc(valor);
+  return `<span class="lg${(campo === "origen" || campo === "pais") ? " flag" : ""}" title="${esc(valor)}">` +
+         `<img src="${esc(url)}" alt="" loading="lazy" data-t="${esc(valor)}"></span>`;
+}
+
+/* Salvavidas: si una imagen falla al cargar, se reemplaza por el texto (nunca ícono roto) */
+document.addEventListener("error", e => {
+  const img = e.target;
+  if(img.tagName === "IMG" && img.classList.contains("opt-logo")){   // logo de botón grande
+    const box = img.closest(".opt-img"); if(box) box.remove(); return;  // el texto del botón ya está debajo
+  }
+  if(img.tagName !== "IMG" || !img.dataset.t) return;
+  (img.closest(".lg") || img).replaceWith(document.createTextNode(img.dataset.t));
+}, true);
+
+/* milisegundos -> "mm:ss.000" */
+function fmtTime(ms){
+  const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000);
+  return `${pad(m)}:${pad(s)}.${pad(Math.round(ms % 1000), 3)}`;
+}
+/* milisegundos -> "+ss.000" (o "+mm:ss.000" si supera el minuto) */
+function fmtGap(ms){
+  if(ms >= 60000) return "+" + fmtTime(ms);
+  return `+${pad(Math.floor(ms / 1000))}.${pad(Math.round(ms % 1000), 3)}`;
+}
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+/* Parser CSV (comillas, saltos de línea internos, coma o punto y coma) */
+function parseCSV(text){
+  text = text.replace(/^\uFEFF/, "");
+  const first = text.split(/\r?\n/, 1)[0];
+  const d = (first.match(/;/g) || []).length > (first.match(/,/g) || []).length ? ";" : ",";
+  const out = []; let row = [], cell = "", q = false;
+  for(let i = 0; i < text.length; i++){
+    const c = text[i];
+    if(q){
+      if(c === '"'){ if(text[i + 1] === '"'){ cell += '"'; i++; } else q = false; }
+      else cell += c;
+    } else if(c === '"') q = true;
+    else if(c === d){ row.push(cell); cell = ""; }
+    else if(c === "\n" || c === "\r"){
+      if(c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell); cell = ""; out.push(row); row = [];
+    } else cell += c;
+  }
+  if(cell !== "" || row.length){ row.push(cell); out.push(row); }
+  return out.filter(r => r.some(x => x.trim() !== ""));
+}
+
+/* CSV -> array de objetos con claves normalizadas (ano, tipo_vehiculo...) */
+function csvToObjects(text){
+  const rows = parseCSV(text);
+  if(rows.length < 2) return [];
+  const keys = rows[0].map(norm);
+  return rows.slice(1).map(r => {
+    const o = {};
+    keys.forEach((k, i) => o[k] = (r[i] ?? "").trim());
+    const u = norm(o.tipo_uso);
+    o.uso = u.startsWith("calle") ? "calle" : u.startsWith("comp") ? "competicion" : u;
+    o.ms = parseTime(o.tiempo);
+    return o;
+  }).filter(o => Number.isFinite(o.ms));
+}
+
+/* ============================================================
+   ESTADO Y FILTROS
+   Cada ventana tiene su PROPIO estado (pestaña, filtros, columnas ocultas)
+   y sus propios elementos (sin IDs globales), por eso no se afectan entre sí.
+   Los datos del CSV (DATA) sí se comparten.
+   ============================================================ */
+const FILTERS = {
+  calle:       [["marca","Marca"], ["ano","Año"], ["modelo","Modelo"]],
+  competicion: [["origen","Origen"], ["pais","País"], ["tipo_vehiculo","Tipo de vehículo"], ["categoria","Categoría"],
+                ["clase","Clase"], ["equipo","Equipo"], ["marca","Marca"], ["modelo","Modelo"], ["ano","Año"]]
+};
+const TITULOS = { general: "General", calle: "Calle", competicion: "Competición" };
+const COLUMNAS = [["origen","Origen"], ["organizador","Organizador"], ["categoria","Categoría"], ["clase","Clase"],
+                  ["equipo","Equipo"], ["pais","País"], ["marca","Marca"], ["modelo","Modelo"]];
+
+let DATA = [];
+let bannerMsg = "";
+const wins = new Set();
+let zTop = 10, openCount = 0;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+const baseRows = w => w.tab === "general" ? DATA : DATA.filter(r => r.uso === w.tab);
+const matches = (w, r, skip) => Object.entries(w.f).every(([k, v]) => !v || k === skip || r[k] === v);
+
+/* Dropdowns dependientes, poblados desde los datos (por ventana) */
+function renderFilters(w){
+  const box = w.el.filters;
+  const defs = FILTERS[w.tab] || [];
+  box.innerHTML = "";
+  box.hidden = !defs.length;
+  defs.forEach(([key, label]) => {
+    const vals = [...new Set(baseRows(w).filter(r => matches(w, r, key)).map(r => r[key]).filter(Boolean))]
+      .sort((a, b) => key === "ano" ? b.localeCompare(a, undefined, {numeric:true})
+                                    : a.localeCompare(b, "es", {numeric:true}));
+    if(w.f[key] && !vals.includes(w.f[key])) w.f[key] = "";
+    const wrap = document.createElement("label");
+    wrap.textContent = label;
+    const sel = document.createElement("select");
+    sel.innerHTML = `<option value="">Todos</option>` +
+      vals.map(v => `<option value="${esc(v)}"${w.f[key] === v ? " selected" : ""}>${esc(v)}</option>`).join("");
+    sel.addEventListener("change", () => { w.f[key] = sel.value; renderFilters(w); renderTable(w); });
+    wrap.appendChild(sel);
+    box.appendChild(wrap);
+  });
+}
+
+/* ============================================================
+   TABLA (por ventana)
+   ============================================================ */
+function renderTable(w){
+  const valid = (FILTERS[w.tab] || []).map(x => x[0]);
+  const view = baseRows(w)
+    .filter(r => Object.entries(w.f).every(([k, v]) => !v || !valid.includes(k) || r[k] === v))
+    .sort((a, b) => a.ms - b.ms);
+
+  const record = DATA.length ? Math.min(...DATA.map(r => r.ms)) : NaN; // récord absoluto
+  const lead = view.length ? view[0].ms : 0;                           // líder de la vista
+  const cell = v => v ? esc(v) : '<span class="dim">—</span>';
+
+  w.el.rows.innerHTML = view.map((r, i) => {
+    const cls = r.ms === record ? "rec" : (i === 0 ? "best" : "");
+    return `<tr class="${cls}">
+      <td class="pos">${i + 1}</td>
+      <td data-c="origen">${media("origen", r.origen)}</td><td data-c="organizador">${media("organizador", r.organizador)}</td>
+      <td data-c="categoria">${media("categoria", r.categoria)}</td><td data-c="clase">${media("clase", r.clase)}</td>
+      <td data-c="equipo">${media("equipo", r.equipo)}</td>
+      <td data-c="pais">${media("pais", r.pais)}</td>
+      <td class="strong" data-c="marca">${media("marca", r.marca)}</td><td data-c="modelo">${cell(r.modelo)}</td>
+      <td class="t">${fmtTime(r.ms)}</td>
+      <td class="g">${i === 0 ? '<span class="dim">—</span>' : fmtGap(r.ms - lead)}</td>
+    </tr>`;
+  }).join("");
+
+  w.el.empty.hidden = view.length > 0;
+  w.el.status.textContent = `${view.length} de ${DATA.length} tiempos`;
+}
+
+/* ============================================================
+   VENTANAS FLOTANTES
+   ============================================================ */
+function front(w){
+  w.el.root.style.zIndex = ++zTop;
+  wins.forEach(x => x.el.root.classList.toggle("active", x === w));
+}
+
+function crearVentana(tab, opener){
+  const root = document.createElement("section");
+  root.className = "win";
+  root.tabIndex = -1;
+  root.setAttribute("role", "dialog");
+  root.setAttribute("aria-label", "Tiempos de vuelta · " + TITULOS[tab]);
+  root.innerHTML = `
+    <div class="win-bar">
+      <span class="win-title">Timing<b>·</b>${TITULOS[tab]}</span>
+      <button class="close" type="button" aria-label="Cerrar ventana">×</button>
+    </div>
+    <div class="win-tools">
+      <button class="fold" type="button" aria-expanded="true" aria-label="Mostrar/Ocultar Filtros">
+        <span class="arrow">▲</span>Mostrar/Ocultar Filtros</button>
+      <div class="tools-r"><span class="status">Cargando…</span>
+        <button class="refresh" type="button">Actualizar</button></div>
+    </div>
+    <div class="panel"><div class="panel-in"><div class="pad">
+      <div class="filters"></div>
+      <div class="cols" role="group" aria-label="Mostrar/Ocultar Columnas">
+        <span class="cols-title">Mostrar/Ocultar Columnas</span>
+        <span class="col-toggles" style="display:contents"></span>
+      </div>
+    </div></div></div>
+    <div class="banner" hidden></div>
+    <div class="win-main">
+      <table>
+        <thead><tr>
+          <th>Pos</th><th data-c="origen">Origen</th><th data-c="organizador">Organizador</th>
+          <th data-c="categoria">Categoría</th><th data-c="clase">Clase</th><th data-c="equipo">Equipo</th><th data-c="pais">País</th>
+          <th data-c="marca">Marca</th><th data-c="modelo">Modelo</th><th class="t">Tiempo</th><th class="g">Gap</th>
+        </tr></thead>
+        <tbody class="rows"></tbody>
+      </table>
+      <div class="empty" hidden>No hay tiempos con esos filtros.</div>
+      <div class="legend">
+        <span><i style="background:var(--violet)"></i>Récord absoluto</span>
+        <span><i style="background:var(--green)"></i>Más rápido de la vista</span>
+      </div>
+    </div>
+    ${["n","s","e","w","ne","nw","se","sw"].map(d => `<i class="rz" data-d="${d}"></i>`).join("")}`;
+
+  const q = s => root.querySelector(s);
+  const w = { tab, f: {}, el: {
+    root, filters: q(".filters"), rows: q(".rows"), empty: q(".empty"),
+    status: q(".status"), banner: q(".banner")
+  }};
+
+  /* Casillas de columnas: afectan solo a esta ventana */
+  COLUMNAS.forEach(([key, label]) => {
+    const lab = document.createElement("label"); lab.className = "pill";
+    const chk = document.createElement("input"); chk.type = "checkbox"; chk.checked = true;
+    const txt = document.createElement("span"); txt.textContent = label;
+    chk.addEventListener("change", () => root.classList.toggle("h-" + key, !chk.checked));
+    lab.append(chk, txt);
+    q(".col-toggles").appendChild(lab);
+  });
+
+  /* Panel de filtros plegable */
+  const fold = q(".fold"), panel = q(".panel");
+  fold.addEventListener("click", () => {
+    const folded = root.classList.toggle("folded");
+    fold.setAttribute("aria-expanded", String(!folded));
+    panel.inert = folded;
+  });
+
+  q(".refresh").addEventListener("click", loadData);
+  montarVentana(root, w, opener);
+  w.el.banner.textContent = bannerMsg; w.el.banner.hidden = !bannerMsg;
+  renderFilters(w); renderTable(w);
+}
+
+/* ============================================================
+   COMPORTAMIENTO COMÚN DE TODA VENTANA FLOTANTE
+   (posición inicial en cascada, z-index, cerrar, arrastrar, redimensionar)
+   ============================================================ */
+function montarVentana(root, w, opener, W0 = 940, H0 = 600){
+  const q = s => root.querySelector(s);
+
+  /* Tamaño y posición iniciales (en cascada, ajustados a la pantalla) */
+  const vw = innerWidth, vh = innerHeight;
+  const W = Math.min(W0, vw - 16), H = Math.min(H0, vh - 16), off = (openCount++ % 6) * 28;
+  root.style.width = W + "px"; root.style.height = H + "px";
+  root.style.left = clamp(40 + off, 8, Math.max(8, vw - W - 8)) + "px";
+  root.style.top  = clamp(36 + off, 8, Math.max(8, vh - H - 8)) + "px";
+
+  /* Traer al frente al hacer clic en cualquier parte de la ventana */
+  root.addEventListener("pointerdown", () => front(w), true);
+
+  /* Cerrar */
+  q(".close").addEventListener("click", () => {
+    root.remove(); wins.delete(w);
+    const top = [...wins].sort((a, b) => a.el.root.style.zIndex - b.el.root.style.zIndex).pop();
+    if(top) front(top); else if(opener) opener.focus();
+  });
+
+  /* Arrastrar desde la barra superior */
+  const bar = q(".win-bar");
+  bar.addEventListener("pointerdown", e => {
+    if(e.target.closest("button")) return;
+    const sx = e.clientX, sy = e.clientY, ox = root.offsetLeft, oy = root.offsetTop;
+    bar.setPointerCapture(e.pointerId);
+    const move = ev => {
+      root.style.left = clamp(ox + ev.clientX - sx, 80 - root.offsetWidth, innerWidth - 80) + "px";
+      root.style.top  = clamp(oy + ev.clientY - sy, 0, innerHeight - 44) + "px";
+    };
+    const up = () => { bar.removeEventListener("pointermove", move); bar.removeEventListener("pointerup", up);
+                       bar.removeEventListener("pointercancel", up); };
+    bar.addEventListener("pointermove", move); bar.addEventListener("pointerup", up); bar.addEventListener("pointercancel", up);
+  });
+
+  /* Redimensionar desde bordes y esquinas */
+  root.querySelectorAll(".rz").forEach(h => h.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    h.setPointerCapture(e.pointerId);
+    const d = h.dataset.d, sx = e.clientX, sy = e.clientY;
+    const r0 = { x: root.offsetLeft, y: root.offsetTop, w: root.offsetWidth, h: root.offsetHeight };
+    const minW = Math.min(420, innerWidth - 16), minH = 280;
+    const move = ev => {
+      const dx = ev.clientX - sx, dy = ev.clientY - sy;
+      let x = r0.x, y = r0.y, ww = r0.w, hh = r0.h;
+      if(d.includes("e")) ww = Math.max(minW, r0.w + dx);
+      if(d.includes("s")) hh = Math.max(minH, r0.h + dy);
+      if(d.includes("w")){ ww = Math.max(minW, r0.w - dx); x = r0.x + r0.w - ww; }
+      if(d.includes("n")){ hh = Math.max(minH, r0.h - dy); y = r0.y + r0.h - hh; if(y < 0){ hh += y; y = 0; } }
+      root.style.left = x + "px"; root.style.top = y + "px";
+      root.style.width = ww + "px"; root.style.height = hh + "px";
+    };
+    const up = () => { h.removeEventListener("pointermove", move); h.removeEventListener("pointerup", up);
+                       h.removeEventListener("pointercancel", up); };
+    h.addEventListener("pointermove", move); h.addEventListener("pointerup", up); h.addEventListener("pointercancel", up);
+  }));
+
+  wins.add(w);
+  document.getElementById("desktop").appendChild(root);
+  front(w);
+  root.focus({ preventScroll: true });
+}
+
+/* ============================================================
+   VENTANA "AUTOS PROBADOS"
+   Menú paso a paso (drill-down) con botones grandes y breadcrumbs. Dos modos:
+   - Competición: Categoría > Clase > Año > Marca > Equipo > Modelo (auto-skip de Clase si está vacía)
+   - Calle:       Marca > Modelo > Año > tarjeta del auto
+   Cada botón muestra su logo (Categoría, Clase, Marca, Equipo) si existe en el diccionario;
+   si no existe, o el nivel no lleva logo (Año, Modelo), muestra solo el texto.
+   ============================================================ */
+/* niveles: [campo, etiqueta si está vacío, texto de "Elige…", diccionario de logos o null] */
+const MODOS = {
+  competicion: {
+    titulo: "Competición",
+    filas: () => DATA.filter(r => r.uso === "competicion"),
+    niveles: [["categoria","Sin categoría","una categoría","categoria"], ["clase","Sin Clase","una clase","clase"],
+              ["ano","Sin año","un año",null], ["marca","Sin marca","una marca","marca"],
+              ["equipo","Sin equipo","un equipo","equipo"]],
+    final: rows => tarjetasCompeticion(rows)
+  },
+  calle: {
+    titulo: "Calle",
+    filas: () => DATA.filter(r => r.uso === "calle"),
+    niveles: [["marca","Sin marca","una marca","marca"], ["modelo","Sin modelo","un modelo",null],
+              ["ano","Sin año","un año",null]],
+    final: rows => tarjetasCalle(rows)
+  }
+};
+const valorDe = (r, n) => r[n[0]] || n[1];
+const filtrarSel = (rows, sel, m) =>
+  rows.filter(r => sel.every(x => valorDe(r, m.niveles.find(n => n[0] === x.campo)) === x.valor));
+
+/* Siguiente nivel a mostrar (o null si ya toca la tarjeta final) */
+function siguienteNivel(rows, sel, m){
+  const hechos = new Set(sel.map(x => x.campo));
+  for(const n of m.niveles){
+    if(hechos.has(n[0])) continue;
+    if(n[0] === "clase" && rows.every(r => !r.clase)) continue;   // AUTO-SKIP de "Clase"
+    return n;
+  }
+  return null;
+}
+
+/* Botones grandes: logo arriba (si existe) y texto debajo; sin logo = solo texto centrado */
+function botonesNivel(rows, nivel, m){
+  const grupos = new Map();
+  rows.forEach(r => { const k = valorDe(r, nivel); if(!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(r); });
+  const keys = [...grupos.keys()].sort(nivel[0] === "ano"
+    ? (a, b) => b.localeCompare(a, undefined, {numeric:true})            // años: más reciente primero
+    : (a, b) => a.localeCompare(b, "es", {numeric:true}));
+  if(nivel[0] === "clase" && keys.includes(nivel[1])) keys.push(keys.splice(keys.indexOf(nivel[1]), 1)[0]);
+  const html = keys.map(k => {
+    const n = new Set(grupos.get(k).map(r => m.niveles.map(x => r[x[0]]).join("|") + "|" + r.modelo)).size;
+    const url = nivel[3] && IMG[nivel[3]][norm(k)];
+    const logo = url ? `<span class="opt-img"><img class="opt-logo" src="${esc(url)}" alt="" loading="lazy"></span>` : "";
+    return `<button class="opt" type="button" data-c="${nivel[0]}" data-v="${esc(k)}">${logo}` +
+           `<span class="opt-txt">${esc(k)}</span><small>${n} ${n === 1 ? "auto" : "autos"}</small></button>`;
+  }).join("");
+  return `<p class="pb-hint">Elige ${nivel[2]}</p><div class="grid">${html}</div>`;
+}
+
+/* Final de Competición: modelos probados con su mejor tiempo (tarjetas no clickeables) */
+function tarjetasCompeticion(rows){
+  const g = new Map();
+  rows.forEach(r => { const k = r.modelo || "Sin modelo"; g.set(k, Math.min(g.has(k) ? g.get(k) : Infinity, r.ms)); });
+  const html = [...g].sort((a, b) => a[1] - b[1]).map(([k, ms]) =>
+    `<div class="car"><span class="car-name">${esc(k)}</span>` +
+    `<span class="car-lbl">Mejor tiempo</span><span class="car-time">${fmtTime(ms)}</span></div>`).join("");
+  return `<p class="pb-hint">Autos probados</p><div class="grid">${html}</div>`;
+}
+
+/* Final de Calle: el auto (Marca Modelo, Año) con su mejor tiempo (tarjeta no clickeable) */
+function tarjetasCalle(rows){
+  const g = new Map();
+  rows.forEach(r => { const k = [r.marca, r.modelo, r.ano].join("|"); const x = g.get(k);
+                      if(!x || r.ms < x.r.ms) g.set(k, { r }); });
+  const html = [...g.values()].sort((a, b) => a.r.ms - b.r.ms).map(({ r }) =>
+    `<div class="car"><span class="car-name">${esc([r.marca, r.modelo].filter(Boolean).join(" ") || "Sin datos")}</span>` +
+    `<span class="car-meta">${esc(r.ano || "Sin año")}</span>` +
+    `<span class="car-lbl">Mejor tiempo</span><span class="car-time">${fmtTime(r.ms)}</span></div>`).join("");
+  return `<p class="pb-hint">Auto probado</p><div class="grid">${html}</div>`;
+}
+
+function crearVentanaProbados(opener){
+  const root = document.createElement("section");
+  root.className = "win";
+  root.tabIndex = -1;
+  root.setAttribute("role", "dialog");
+  root.setAttribute("aria-label", "Autos Probados");
+  root.innerHTML = `
+    <div class="win-bar">
+      <span class="win-title">Autos Probados</span>
+      <button class="close" type="button" aria-label="Cerrar ventana">×</button>
+    </div>
+    <div class="pb-body">
+      <p>Elige una categoría</p>
+      <div class="pb-menu">
+        <button class="menu-btn" type="button" data-probados="competicion">Competición<small>Autos de competición</small></button>
+        <button class="menu-btn" type="button" data-probados="calle">Calle<small>Autos de calle</small></button>
+      </div>
+    </div>
+    <div class="pb-comp" hidden>
+      <div class="pb-top">
+        <button class="back" type="button"><span aria-hidden="true">←</span> Atrás</button>
+        <nav class="crumbs" aria-label="Ruta actual"></nav>
+      </div>
+      <div class="pb-view" tabindex="-1"></div>
+    </div>
+    ${["n","s","e","w","ne","nw","se","sw"].map(d => `<i class="rz" data-d="${d}"></i>`).join("")}`;
+
+  const q = s => root.querySelector(s);
+  const w = { kind: "probados", el: { root } };
+  const menu = q(".pb-body"), comp = q(".pb-comp"), view = q(".pb-view"), crumbs = q(".crumbs");
+  const sel = [];                                      // selección actual: [{campo, valor}, ...]
+  let m = null, entrada = null;                        // modo activo y botón con el que se entró
+
+  function render(){
+    const todos = m.filas();
+    let rows = filtrarSel(todos, sel, m);
+    if(sel.length && !rows.length){ sel.length = 0; rows = todos; }   // los datos cambiaron: volver al inicio
+    const ruta = [m.titulo, ...sel.map(x => x.valor)];
+    crumbs.innerHTML = ruta.map((t, i) => i === ruta.length - 1
+      ? `<span class="crumb cur" aria-current="page">${esc(t)}</span>`
+      : `<button class="crumb" type="button" data-i="${i}">${esc(t)}</button>`).join('<span class="sep">&gt;</span>');
+    if(!rows.length){
+      view.innerHTML = `<div class="empty">No hay autos de ${esc(m.titulo.toLowerCase())} en el CSV.</div>`; return;
+    }
+    const nivel = siguienteNivel(rows, sel, m);
+    view.innerHTML = nivel ? botonesNivel(rows, nivel, m) : m.final(rows);
+    view.scrollTop = 0;
+  }
+  w.refresh = () => { if(!comp.hidden && m) render(); };
+
+  root.querySelectorAll("[data-probados]").forEach(btn => btn.addEventListener("click", () => {
+    m = MODOS[btn.dataset.probados]; entrada = btn;
+    if(!m) return;
+    sel.length = 0; menu.hidden = true; comp.hidden = false; render(); q(".back").focus();
+  }));
+  q(".back").addEventListener("click", () => {
+    if(sel.length){ sel.pop(); render(); view.focus({ preventScroll: true }); }   // un nivel atrás
+    else { comp.hidden = true; menu.hidden = false; if(entrada) entrada.focus(); } // desde el inicio: al menú
+  });
+  crumbs.addEventListener("click", e => {              // saltar a cualquier punto de la ruta
+    const b = e.target.closest("button.crumb");
+    if(b){ sel.length = +b.dataset.i; render(); view.focus({ preventScroll: true }); }
+  });
+  view.addEventListener("click", e => {                // elegir una opción: bajar un nivel
+    const b = e.target.closest("button.opt");
+    if(b){ sel.push({ campo: b.dataset.c, valor: b.dataset.v }); render(); view.focus({ preventScroll: true }); }
+  });
+
+  montarVentana(root, w, opener, 720, 520);
+}
+
+/* ============================================================
+   VENTANA "CARGAR TIEMPO"  (botón "+" del header)
+   Paso 1: elegir Calle o Competición. Paso 2: formulario con autocompletado (datalist)
+   alimentado por los valores únicos del CSV. Envía el tiempo a APPS_SCRIPT_URL (POST).
+   ============================================================ */
+/* [clave interna (igual que csvToObjects), encabezado de la hoja, etiqueta] */
+const CARGA_CAMPOS = [
+  ["origen","Origen","Origen"], ["organizador","Organizador","Organizador"], ["categoria","Categoria","Categoría"],
+  ["clase","Clase","Clase"], ["equipo","Equipo","Equipo"], ["pais","Pais","País"],
+  ["marca","Marca","Marca"], ["modelo","Modelo","Modelo"], ["ano","Año","Año"],
+  ["tipo_vehiculo","Tipo_Vehiculo","Tipo de vehículo"]
+];
+const CARGA_MODOS = {
+  calle:       { tipoUso: "Calle",       titulo: "Calle",       campos: ["origen","marca","modelo","ano"] },
+  competicion: { tipoUso: "Competicion", titulo: "Competición", campos: CARGA_CAMPOS.map(c => c[0]) }
+};
+const CARGA_OBLIGATORIOS = ["marca", "modelo"];     // además del Tiempo
+let cargarCount = 0;                                 // para ids únicos de los <datalist> entre ventanas
+
+/* Valores únicos que ya existen en el CSV para una columna */
+function valoresUnicos(k){
+  return [...new Set(DATA.map(r => r[k]).filter(Boolean))].sort(k === "ano"
+    ? (a, b) => b.localeCompare(a, undefined, {numeric:true})
+    : (a, b) => a.localeCompare(b, "es", {numeric:true}));
+}
+const opcionesDatalist = k => valoresUnicos(k).map(v => `<option value="${esc(v)}"></option>`).join("");
+
+function crearVentanaCargar(opener){
+  const n = ++cargarCount;
+  const root = document.createElement("section");
+  root.className = "win";
+  root.tabIndex = -1;
+  root.setAttribute("role", "dialog");
+  root.setAttribute("aria-label", "Cargar Tiempo");
+  root.innerHTML = `
+    <div class="win-bar">
+      <span class="win-title">Cargar Tiempo</span>
+      <button class="close" type="button" aria-label="Cerrar ventana">×</button>
+    </div>
+    <div class="pb-body">
+      <p>¿Qué tipo de tiempo vas a cargar?</p>
+      <div class="pb-menu">
+        <button class="menu-btn" type="button" data-cargar="calle">Calle<small>Auto de calle</small></button>
+        <button class="menu-btn" type="button" data-cargar="competicion">Competición<small>Auto de competición</small></button>
+      </div>
+    </div>
+    <div class="pb-comp" hidden>
+      <div class="pb-top">
+        <button class="back" type="button"><span aria-hidden="true">←</span> Atrás</button>
+        <nav class="crumbs" aria-label="Ruta actual"></nav>
+      </div>
+      <div class="pb-view" tabindex="-1"><form class="cg-form" autocomplete="off"></form></div>
+    </div>
+    ${["n","s","e","w","ne","nw","se","sw"].map(d => `<i class="rz" data-d="${d}"></i>`).join("")}`;
+
+  const q = s => root.querySelector(s);
+  const w = { kind: "cargar", el: { root } };
+  const menu = q(".pb-body"), comp = q(".pb-comp"), form = q(".cg-form"), crumbs = q(".crumbs");
+  let m = null, entrada = null;
+
+  function paso1(){ comp.hidden = true; menu.hidden = false; form.innerHTML = ""; m = null; if(entrada) entrada.focus(); }
+
+  function paso2(){
+    const campos = CARGA_CAMPOS.filter(c => m.campos.includes(c[0]));
+    crumbs.innerHTML = `<span class="crumb">Cargar tiempo</span><span class="sep">&gt;</span><span class="crumb cur" aria-current="page">${esc(m.titulo)}</span>`;
+    form.innerHTML = campos.map(([k, , label]) => {
+      const req = CARGA_OBLIGATORIOS.includes(k);
+      const extra = k === "ano" ? ' inputmode="numeric" maxlength="4" pattern="[0-9]{4}" title="Año de 4 cifras (ej. 2024)"' : "";
+      return `<label class="cg-f"><span>${label}${req ? " *" : ""}</span>` +
+             `<input name="${k}" list="dl${n}-${k}" autocomplete="off"${req ? " required" : ""}${extra}>` +
+             `<datalist id="dl${n}-${k}" data-k="${k}">${opcionesDatalist(k)}</datalist></label>`;
+    }).join("") +
+    `<label class="cg-f cg-time cg-full"><span>Tiempo *</span>` +
+    `<input name="tiempo" required inputmode="decimal" placeholder="mm:ss.000" autocomplete="off"></label>` +
+    `<p class="cg-note cg-full">* Obligatorio. Los campos con sugerencias también aceptan texto nuevo.</p>` +
+    `<p class="cg-msg cg-full" role="alert"></p>` +
+    `<button class="save-btn cg-full" type="submit">Guardar Tiempo</button>`;
+    menu.hidden = true; comp.hidden = false;
+    form.elements[0].focus();
+  }
+
+  /* Las sugerencias se actualizan cuando se refrescan los datos del CSV */
+  w.refresh = () => form.querySelectorAll("datalist").forEach(dl => { dl.innerHTML = opcionesDatalist(dl.dataset.k); });
+
+  root.querySelectorAll("[data-cargar]").forEach(btn => btn.addEventListener("click", () => {
+    m = CARGA_MODOS[btn.dataset.cargar]; entrada = btn; if(m) paso2();
+  }));
+  q(".back").addEventListener("click", paso1);
+
+  /* Normaliza el tiempo a mm:ss.000 al salir del campo */
+  form.addEventListener("focusout", e => {
+    if(e.target.name !== "tiempo") return;
+    const ms = parseTime(e.target.value);
+    if(Number.isFinite(ms) && ms > 0) e.target.value = fmtTime(ms);
+  });
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const msg = q(".cg-msg"), btn = q(".save-btn");
+    msg.textContent = "";
+    const input = form.elements.namedItem("tiempo");
+    const ms = parseTime(input.value);
+    if(!Number.isFinite(ms) || ms <= 0){
+      msg.textContent = "Tiempo inválido. Usá el formato mm:ss.000 (ej. 01:27.060).";
+      input.focus(); return;
+    }
+    if(APPS_SCRIPT_URL === "URL_AQUI"){
+      alert("Falta configurar APPS_SCRIPT_URL en el código con el enlace de tu Apps Script."); return;
+    }
+    /* Objeto con TODAS las columnas de la hoja; las que no se usan en Calle van vacías */
+    const payload = { Tipo_Uso: m.tipoUso };
+    CARGA_CAMPOS.forEach(([k, header]) => {
+      payload[header] = m.campos.includes(k) ? form.elements.namedItem(k).value.trim() : "";
+    });
+    payload.Tiempo = fmtTime(ms);
+
+    btn.disabled = true; btn.textContent = "Enviando...";
+    try{
+      /* text/plain evita el preflight CORS, que Apps Script no responde */
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      let data = null; try{ data = JSON.parse(await res.text()); }catch(_){}
+      if(data && (data.ok === false || data.error)) throw new Error(data.error || data.message || "El servidor rechazó los datos");
+      alert("¡Tiempo guardado con éxito!");
+      paso1();                                          // limpia el formulario y vuelve al Paso 1
+    }catch(err){
+      alert("No se pudo guardar el tiempo: " + err.message);
+      btn.disabled = false; btn.textContent = "Guardar Tiempo";
+    }
+  });
+
+  montarVentana(root, w, opener, 640, 620);
+}
+
+/* Tarjetas del menú principal: cada una abre su ventana flotante */
+document.querySelectorAll(".tile[data-open]").forEach(btn =>
+  btn.addEventListener("click", () => crearVentana(btn.dataset.open, btn)));
+document.querySelectorAll(".tile[data-garage]").forEach(btn =>
+  btn.addEventListener("click", () => crearVentanaProbados(btn)));
+document.querySelector(".add-btn").addEventListener("click", e => crearVentanaCargar(e.currentTarget));
+
+/* Imágenes de fondo de las tarjetas (reemplaza los "" por tus URLs).
+   La imagen solo se aplica si carga bien; si no, queda el degradado de respaldo (nunca imagen rota). */
+const fondosInicio = {
+  general:     "",   // curva de un circuito de carreras
+  calle:       "",   // ruta o autopista con ciudad al atardecer
+  competicion: "",   // pista vacía con tribunas al atardecer
+  probados:    ""    // auto deportivo moderno en garaje/boxes de noche
+};
+document.querySelectorAll(".tile").forEach(tile => {
+  const url = fondosInicio[tile.dataset.fondo];
+  if(!url) return;
+  const im = new Image();
+  im.onload = () => tile.style.setProperty("--img", `url("${url.replace(/"/g, "%22")}")`);
+  im.src = url;
+});
+
+/* ============================================================
+   CARGA DE DATOS (fetch) — compartida por todas las ventanas
+   ============================================================ */
+function refreshAll(){
+  wins.forEach(w => {
+    if(w.kind === "probados" || w.kind === "cargar"){ w.refresh && w.refresh(); return; }
+    if(!w.tab) return;
+    w.el.banner.textContent = bannerMsg; w.el.banner.hidden = !bannerMsg;
+    renderFilters(w); renderTable(w);
+  });
+}
+
+async function loadData(){
+  const isPlaceholder = GOOGLE_SHEET_CSV_URL.includes("TU_ID_DE_HOJA");
+  try{
+    if(isPlaceholder) throw new Error("placeholder");
+    const res = await fetch(GOOGLE_SHEET_CSV_URL, { cache: "no-store" });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    DATA = csvToObjects(await res.text());
+    bannerMsg = "";
+  }catch(err){
+    DATA = csvToObjects(DEMO_CSV);
+    bannerMsg = isPlaceholder
+      ? "Mostrando datos de ejemplo. Reemplaza GOOGLE_SHEET_CSV_URL en el código por el enlace de tu hoja publicada."
+      : "No se pudo leer la hoja (" + err.message + "). Mostrando datos de ejemplo.";
+  }
+  refreshAll();
+}
+
+loadData();
+if(REFRESH_MS > 0 && !GOOGLE_SHEET_CSV_URL.includes("TU_ID_DE_HOJA")) setInterval(loadData, REFRESH_MS);
+</script>
+</body>
+</html>
